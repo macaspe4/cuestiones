@@ -13,6 +13,118 @@ knitr::opts_chunk$set(echo = TRUE)
 # Cuestion 1
 
 ```{r}
+texto <- "Pues sepa Vuestra Merced, ante todas cosas, que a mí llaman Lázaro de Tormes, hijo de Tomé González y de Antona Pérez, naturales de Tejares, aldea de Salamanca. Mi nacimiento fue dentro del río Tormes, por la cual causa tomé el sobrenombre; y fue de esta manera: mi padre, que Dios perdone, tenía cargo de proveer una molienda de una aceña que está ribera de aquel río, en la cual fue molinero más de quince años; y, estando mi madre una noche en la aceña, preñada de mí, tomóle el parto y parióme allí. De manera que con verdad me puedo decir nacido en el río. Pues siendo yo niño de ocho años, achacaron a mi padre ciertas sangrías mal hechas en los costales de los que allí a moler venían, por lo cual fue preso, y confesó y no negó, y padeció persecución por justicia. Espero en Dios que está en la gloria, pues el Evangelio los llama bienaventurados. En este tiempo se hizo cierta armada contra moros, entre los cuales fue mi padre (que a la sazón estaba desterrado por el desastre ya dicho), con cargo de acemilero de un caballero que allá fue. Y con su señor, como leal criado, feneció su vida. Mi viuda madre, como sin marido y sin abrigo se viese, determinó arrimarse a los buenos por ser uno de ellos, y vínose a vivir a la ciudad y alquiló una casilla y metióse a guisar de comer a ciertos estudiantes, y lavaba la ropa a ciertos mozos de caballos del comendador de la Magdalena, de manera que fue frecuentando las caballerizas."
+
+
+nuevo <- tolower(texto)
+length(nuevo)
+
+#a)
+sum(grepl("^\\s*[aeiou]", strsplit(texto, " ")[[1]]))
+
+#b)
+sum(unlist(gregexpr(" ", nuevo)))
+
+#c)
+s <- str_count(texto, "")[[1]]
+s
+
+#d)
+n_consonantes <- nchar(gsub("[áéíóú]", "", nuevo))
+n_consonantes
 
 ```
+
+
+# Cuestion 2
+
+```{r}
+library(lubridate)
+
+# Leer archivo tsv
+datos <- read.table("Nosotros.tsv", header=TRUE, sep="\t")
+
+# Convertir fecha de nacimiento a objeto "Date"
+datos$Fecha <- dmy(datos$Fecha)
+
+# Calcular la diferencia en años entre la fecha de nacimiento y el 3 de febrero de 2021
+edad <- as.numeric(difftime(date("2021-02-03"), datos$Fecha, units="days")) / 365
+
+# Sumar las edades de todos los miembros
+suma_edades <- sum(edad)
+
+# Redondear el resultado a 3 decimales
+suma_edades <- round(suma_edades, 3)
+suma_edades
+
+
+
+```
+
+
+# Cuestion 3
+
+```{r}
+# Cargamos las librerias
+library(lubridate)
+library(tidyverse)
+
+
+#para la mediana y desviacion tipica
+# Cargar los datos del archivo UScereal.csv
+us_cereal <- read.csv("UScereal.csv")
+
+# Seleccionar solo la columna de "carbo"
+carbo <- us_cereal$carbo
+
+# Definir la función para aplicar la regla Hampel
+hampel <- function(x, k = 3, t0 = 2) {
+  n <- length(x)
+  y <- x
+  for (i in (1+k):(n-k)) {
+    # Calcular la mediana y la desviación mediana absoluta (MAD)
+    med <- median(x[(i-k):(i+k)])
+    mad <- median(abs(x[(i-k):(i+k)] - med))
+    
+    # Calcular el valor de umbral (threshold)
+    threshold <- t0 * mad
+    
+    # Identificar y reemplazar los outliers
+    if (abs(x[i] - med) > threshold) {
+      y[i] <- med
+    }
+  }
+  return(y)
+}
+
+# Aplicar la regla Hampel para eliminar los outliers de la variable "carbo"
+carbo_hampel <- hampel(carbo)
+
+# Calcular la desviación típica de la variable "carbo" después de eliminar los outliers
+sd_carbo_hampel <- sd(carbo_hampel)
+
+# Imprimir el resultado redondeado a 3 decimales
+round(sd_carbo_hampel, 3)
+
+
+
+#para el valor medio
+# Cargar la librería tidyverse y lubridate
+library(tidyverse)
+library(lubridate)
+
+# Leer el archivo UScereal.csv
+cereal <- read_csv("UScereal.csv")
+
+# Aplicar la regla Hampel para eliminar outliers en la variable carbo
+cereal <- cereal %>% 
+  mutate(carbo = ifelse(abs(carbo - median(carbo)) > 3 * mad(carbo), NA, carbo))
+
+# Calcular el valor medio de la variable carbo después de eliminar outliers
+mean_carbo <- mean(cereal$carbo, na.rm = TRUE)
+mean_carbo
+
+
+```
+
 
